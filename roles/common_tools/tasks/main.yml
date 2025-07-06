@@ -1,0 +1,31 @@
+- name: Ensure system is up-to-date
+  ansible.builtin.yum:
+    name: "*"
+    state: latest
+  tags: update
+
+- name: Install required tools
+  ansible.builtin.yum:
+    name:
+      - git
+      - htop
+      - jq
+      - make
+      - tar
+      - tmux
+      - tree
+      - vim
+      - wget
+    state: present
+  tags: install-tooling
+
+- name: Gather installed package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Install curl ONLY if curl-minimal is not present
+  ansible.builtin.dnf:
+    name: curl
+    state: present
+  when: "'curl-minimal' not in ansible_facts.packages"
+
