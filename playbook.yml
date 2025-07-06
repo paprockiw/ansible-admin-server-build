@@ -3,12 +3,99 @@
   become: true
 
   vars:
-    target_user: admin  # default value; can be overridden at runtime
     bash_profile_file: bash_profile
     bash_rc_file: bash_rc
+    ssh_auth_keys_file: ""         # Example: "files/id_rsa.pub"
+    target_user: admin  # default value; can be overridden at runtime
 
   roles:
   ### Install utilities
     - role: common_tools
     - role: python3
     - role: terraform
+
+  tasks:
+
+    ### Set up user
+    - name: Ensure target_user group exists
+      ansible.builtin.group:
+        name: "{{ target_user }}"
+        state: present
+      tags:
+        - user-setup
+
+    - name: Set up target_user
+      ansible.builtin.user:
+        name: "{{ target_user }}"
+        shell: /bin/bash
+        group: "{{ target_user }}"
+        create_home: no
+        home: "/{{ target_user }}"
+      tags:
+        - user-setup
+ 
+    - name: Ensure target_user home directory exists
+      ansible.builtin.file:
+        path: "/home/{{ target_user }}"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0750'
+      tags:
+        - user-setup
+
+    - name: Install target_user .bash_profile
+      ansible.builtin.copy:
+        src: "files/{{ bash_profile_file }}"
+        dest: "/{{ target_user }}/.bash_profile"
+        mode: '0644'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      tags:
+        - user-setup
+
+    - name: Install target_user .bashrc
+      ansible.builtin.copy:
+        src: "files/{{ bash_rc_file }}"
+        dest: "/home/{{ target_user }}/.bashrc"
+        mode: '0644'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      tags:
+        - user-setup
+
+
+
+# SSH configuration for user
+    - name: Ensure target_user SSH dir exists
+      ansible.builtin.file:
+        path: "/home/{{ target_user }}/.ssh"
+        state: directory
+        mode: '700'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      tags:
+        - user-ssh-config
+        - user-setup
+
+    - name: Check if SSH authorized key file is provided
+      stat:
+        path: "{{ ssh_auth_keys_file }}"
+      delegate_to: localhost
+      become: false
+      register: ssh_auth_keys_stat
+      tags:
+        - user-ssh-config
+        - user-setup
+
+    - name: Install authorized SSH public key for target user
+      copy:
+        src: "{{ ssh_auth_keys_file }}"
+        dest: "/home/{{ target_user }}/.ssh/authorized_keys"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0600'
+      when: ssh_auth_keys_stat.stat.exists
+      tags:
+        - user-ssh-config
+        - user-setup

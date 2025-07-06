@@ -1,0 +1,14 @@
+# ~/.bash_profile
+
+# Source .bashrc for interactive behavior
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+
+# Set environment variables
+export PATH="$HOME/bin:$PATH"
+export EDITOR=vim
+
+# Setup language/locale (if needed)
+export LANG=en_US.UTF-8
+

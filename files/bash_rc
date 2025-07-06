@@ -1,0 +1,22 @@
+# Default Editor
+export EDITOR=vim
+
+# Customize PATH
+export PATH="$HOME/bin:$PATH"
+
+
+## History
+# Don't store commands that start with a space
+HISTCONTROL=ignorespace:ignoredups
+
+# Don't save duplicate commands or common password tools
+HISTIGNORE="ls:cd:cd -:pwd:exit:clear:history:passwd:curl *--user *:curl *--header *:curl *--data *:wget *--http-user *:wget *--http-password *:ssh *"
+
+# Disable history for current shell session (optional, but useful for sudo/sensitive use)
+# export HISTFILE=/dev/null
+
+export HISTTIMEFORMAT="%F %T "
+
+export HISTCONTROL=ignoredups:erasedups
+
+export HISTSIZE=10000
