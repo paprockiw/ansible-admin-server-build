@@ -47,7 +47,7 @@
     - name: Install target_user .bash_profile
       ansible.builtin.copy:
         src: "files/{{ bash_profile_file }}"
-        dest: "/{{ target_user }}/.bash_profile"
+        dest: "/home/{{ target_user }}/.bash_profile"
         mode: '0644'
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
