@@ -1,0 +1,12 @@
+---
+- hosts: admin_servers
+  become: true
+
+  vars:
+    target_user: admin  # default value; can be overridden at runtime
+    bash_profile_file: bash_profile
+    bash_rc_file: bash_rc
+
+  roles:
+  ### Install utilities
+    - role: common_tools
