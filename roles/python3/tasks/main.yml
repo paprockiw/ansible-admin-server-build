@@ -1,0 +1,64 @@
+- name: Install Python build dependencies
+  ansible.builtin.dnf:
+    name:
+      - gcc
+      - make
+      - tar
+      - bzip2
+      - bzip2-devel
+      - libffi-devel
+      - zlib-devel
+      - xz-devel
+      - openssl-devel
+      - ncurses-devel
+      - readline-devel
+      - wget
+      - findutils  # for `xargs`, `find`, etc. in some builds
+    state: present
+
+- name: Download Python source
+  get_url:
+    url: "https://www.python.org/ftp/python/{{ python_version }}/Python-{{ python_version }}.tgz"
+    dest: "/{{ tmp_dir }}/Python-{{ python_version }}.tgz"
+    mode: '0644'
+
+- name: Extract Python source to tmp dir
+  unarchive:
+    src: "/{{ tmp_dir }}/Python-{{ python_version }}.tgz"
+    dest: "/{{ tmp_dir }}"
+    remote_src: yes
+
+- name: Compile and install Python
+  shell: |
+    cd /{{ tmp_dir }}/Python-{{ python_version }}
+    ./configure --enable-optimizations --prefix={{ python_prefix }}
+    make -j "$(nproc)"
+    make altinstall
+  args:
+    creates: "{{ python_prefix }}/bin/python{{ python_major_version }}"
+
+- name: Symlink Python system-wide as {{ python_link_name }}
+  ansible.builtin.file:
+    src: "{{ python_prefix }}/bin/python{{ python_major_version }}"
+    dest: "/usr/bin/{{ python_link_name }}"
+    state: link
+    force: true
+
+- name: Verify Python installation
+  command: "{{ python_link_name }} --version"
+  register: python_version_output
+
+- name: Print installed Python version
+  debug:
+    msg: "Installed Python version: {{ python_version_output.stdout }}"
+
+- name: Clean up extracted source directory
+  file:
+    path: "/{{ tmp_dir }}/Python-{{ python_version }}"
+    state: absent
+
+- name: Clean up downloaded archive
+  file:
+    path: "/{{ tmp_dir }}/Python-{{ python_version }}.tgz"
+    state: absent
+
