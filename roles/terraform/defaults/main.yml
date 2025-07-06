@@ -1,0 +1,6 @@
+terraform_version: "1.12.2"
+terraform_zip: "terraform_{{ terraform_version }}_linux_amd64.zip"
+terraform_url: "https://releases.hashicorp.com/terraform/{{ terraform_version }}/{{ terraform_zip }}"
+install_path: "/usr/local/bin"
+tmp_dir: "/tmp"
+
