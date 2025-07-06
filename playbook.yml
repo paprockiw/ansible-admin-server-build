@@ -11,3 +11,4 @@
   ### Install utilities
     - role: common_tools
     - role: python3
+    - role: terraform

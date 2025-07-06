@@ -13,20 +13,26 @@
       - ncurses-devel
       - readline-devel
       - wget
-      - findutils  # for `xargs`, `find`, etc. in some builds
+      - findutils
     state: present
+  tags:
+    - install-python
 
 - name: Download Python source
   get_url:
     url: "https://www.python.org/ftp/python/{{ python_version }}/Python-{{ python_version }}.tgz"
     dest: "/{{ tmp_dir }}/Python-{{ python_version }}.tgz"
     mode: '0644'
+  tags:
+    - install-python
 
 - name: Extract Python source to tmp dir
   unarchive:
     src: "/{{ tmp_dir }}/Python-{{ python_version }}.tgz"
     dest: "/{{ tmp_dir }}"
     remote_src: yes
+  tags:
+    - install-python
 
 - name: Compile and install Python
   shell: |
@@ -36,6 +42,8 @@
     make altinstall
   args:
     creates: "{{ python_prefix }}/bin/python{{ python_major_version }}"
+  tags:
+    - install-python
 
 - name: Symlink Python system-wide as {{ python_link_name }}
   ansible.builtin.file:
@@ -43,22 +51,32 @@
     dest: "/usr/bin/{{ python_link_name }}"
     state: link
     force: true
+  tags:
+    - install-python
 
 - name: Verify Python installation
   command: "{{ python_link_name }} --version"
   register: python_version_output
+  tags:
+    - install-python
 
 - name: Print installed Python version
   debug:
     msg: "Installed Python version: {{ python_version_output.stdout }}"
+  tags:
+    - install-python
 
 - name: Clean up extracted source directory
   file:
     path: "/{{ tmp_dir }}/Python-{{ python_version }}"
     state: absent
+  tags:
+    - install-python
 
 - name: Clean up downloaded archive
   file:
     path: "/{{ tmp_dir }}/Python-{{ python_version }}.tgz"
     state: absent
+  tags:
+    - install-python
 

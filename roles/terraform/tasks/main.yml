@@ -2,12 +2,18 @@
   ansible.builtin.yum:
     name: unzip
     state: present
+  tags:
+    - install-terraform
+
+# --- Terraform Installation ---
 
 - name: Download Terraform {{ terraform_version }}
   ansible.builtin.get_url:
     url: "{{ terraform_url }}"
     dest: "{{ tmp_dir }}/{{ terraform_zip }}"
     mode: '0644'
+  tags:
+    - install-terraform
 
 - name: Unzip Terraform binary
   ansible.builtin.unarchive:
@@ -15,22 +21,33 @@
     dest: "{{ install_path }}"
     remote_src: yes
     mode: '0755'
+  tags:
+    - install-terraform
 
 - name: Ensure terraform binary is executable
   ansible.builtin.file:
     path: "{{ install_path }}/terraform"
     mode: '0755'
     state: file
+  tags:
+    - install-terraform
 
 - name: Verify Terraform installation
   command: terraform version
   register: terraform_version_output
+  tags:
+    - install-terraform
 
 - name: Display installed Terraform version
   debug:
     msg: "Terraform version: {{ terraform_version_output.stdout }}"
+  tags:
+    - install-terraform
 
 - name: Clean up Terraform archive
   ansible.builtin.file:
     path: "{{ tmp_dir }}/{{ terraform_zip }}"
     state: absent
+  tags:
+    - install-terraform
+

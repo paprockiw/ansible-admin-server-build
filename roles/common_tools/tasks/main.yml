@@ -2,7 +2,9 @@
   ansible.builtin.yum:
     name: "*"
     state: latest
-  tags: update
+  tags: 
+    - install-common-tools
+    - update
 
 - name: Install required tools
   ansible.builtin.yum:
@@ -14,18 +16,24 @@
       - tar
       - tmux
       - tree
+      - unzip
       - vim
       - wget
     state: present
-  tags: install-tooling
+  tags: 
+    - install-common-tools
 
 - name: Gather installed package facts
   ansible.builtin.package_facts:
     manager: auto
+  tags: 
+    - install-common-tools
 
 - name: Install curl ONLY if curl-minimal is not present
   ansible.builtin.dnf:
     name: curl
     state: present
   when: "'curl-minimal' not in ansible_facts.packages"
+  tags: 
+    - install-common-tools
 
