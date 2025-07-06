@@ -1,0 +1,34 @@
+# Python virtual environment
+venv/
+
+# Python bytecode
+*.pyc
+__pycache__/
+
+# Ansible retry files
+*.retry
+
+# Molecule test output (if using Molecule)
+.molecule/
+
+# SSH artifacts (e.g., generated during ansible runs)
+*.pem
+*.key
+*.pub
+
+# Inventory backups or temp files
+inventory/*.bak
+inventory/*~
+
+# Logs and debugging output
+*.log
+
+# Role caches (e.g. from ansible-galaxy)
+roles/*/.galaxy_install_info
+
+# VSCode settings (optional)
+.vscode/
+
+# macOS or editor system files
+.DS_Store
+
