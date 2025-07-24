@@ -60,7 +60,9 @@
   shell: make altinstall >> make.log 2>&1
   args:
     chdir: "{{ tmp_dir }}/Python-{{ python_version }}"
-    creates: "/usr/local/bin/python{{ python_major_version }}"
+  register: altinstall_result
+  ### Check to see that a basic library is installed: 
+  failed_when: "'encodings' not in lookup('ansible.builtin.fileglob', '/usr/local/lib/python3.12/*')"
   tags: install-python
 
 - name: Symlink Python system-wide 
@@ -98,7 +100,6 @@
     state: absent
   tags:
     - install-python
-    - python-cleanup
 
 - name: Clean up alternative tmp directory
   file:
@@ -108,12 +109,10 @@
     - install-python
     - python-cleanup
 
-- name: Remove temporary swap file
-  shell: |
-    swapoff {{ tmp_dir }}/python-build-swapfile
-    rm -f {{ tmp_dir }}/python-build-swapfile
-  when: cleanup_swap | default(true)
+- name: Clean up alternative tmp directory
+  file:
+    path: "{{ tmp_dir }}/tmp"
+    state: absent
   tags:
     - install-python
-    - enable-python-build-swap
-
+    - python-cleanup
