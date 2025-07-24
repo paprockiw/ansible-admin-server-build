@@ -1,17 +1,3 @@
-- name: Add 2GB swap file for compilation
-  shell: |
-    fallocate -l 2G /tmp-python-build-swapfile || dd if=/dev/zero of=/tmp-python-build-swapfile bs=1M count=2048
-    chmod 600 /tmp-python-build-swapfile
-    mkswap /tmp-python-build-swapfile
-    swapon /tmp-python-build-swapfile
-  args:
-    creates: /tmp-python-build-swapfile
-  become: true
-  tags:
-    - install-python
-    - enable-python-build-swap
-
-
 - name: Install Python build dependencies
   ansible.builtin.dnf:
     name:
@@ -32,41 +18,50 @@
   tags:
     - install-python
 
+- name: Create alternative tmp directory for compiler
+  file:
+    path: "{{ tmp_dir }}/tmp"
+    state: directory
+    mode: '1777'
+  tags:
+    - install-python
+
 - name: Download Python source
   ansible.builtin.get_url:
     url: "https://www.python.org/ftp/python/{{ python_version }}/Python-{{ python_version }}.tgz"
-    dest: "/tmp/Python-{{ python_version }}.tgz"
+    dest: "{{ tmp_dir }}/Python-{{ python_version }}.tgz"
     mode: '0644'
   tags: install-python
 
 - name: Extract Python source
   ansible.builtin.unarchive:
-    src: "/tmp/Python-{{ python_version }}.tgz"
-    dest: "/tmp"
+    src: "{{ tmp_dir }}/Python-{{ python_version }}.tgz"
+    dest: "{{ tmp_dir }}"
     remote_src: yes
   tags: install-python
 
 - name: Configure Python build
   shell: ./configure --enable-optimizations --prefix=/usr/local > configure.log 2>&1
   args:
-    chdir: "/tmp/Python-{{ python_version }}"
-    creates: "/tmp/Python-{{ python_version }}/Makefile"
+    chdir: "{{ tmp_dir }}/Python-{{ python_version }}"
+    creates: "{{ tmp_dir }}/Python-{{ python_version }}/Makefile"
   tags: install-python
 
 - name: Compile Python source
-  shell: make -j $(nproc) > make.log 2>&1
+  shell: make -j 1 > make.log 2>&1
   args:
-    chdir: "/tmp/Python-{{ python_version }}"
-    creates: "/tmp/Python-{{ python_version }}/python"
+    chdir: "{{ tmp_dir }}/Python-{{ python_version }}"
+    creates: "{{ tmp_dir }}/Python-{{ python_version }}/python"
+  environment:
+    TMPDIR: "{{ tmp_dir }}/tmp"
   tags: install-python
 
 - name: Install Python via altinstall
   shell: make altinstall >> make.log 2>&1
   args:
-    chdir: "/tmp/Python-{{ python_version }}"
+    chdir: "{{ tmp_dir }}/Python-{{ python_version }}"
     creates: "/usr/local/bin/python{{ python_major_version }}"
   tags: install-python
-
 
 - name: Symlink Python system-wide 
   ansible.builtin.file:
@@ -91,22 +86,32 @@
 
 - name: Clean up extracted source directory
   file:
-    path: "/{{ tmp_dir }}/Python-{{ python_version }}"
+    path: "{{ tmp_dir }}/Python-{{ python_version }}"
     state: absent
   tags:
     - install-python
+    - python-cleanup
 
 - name: Clean up downloaded archive
   file:
-    path: "/{{ tmp_dir }}/Python-{{ python_version }}.tgz"
+    path: "{{ tmp_dir }}/Python-{{ python_version }}.tgz"
     state: absent
   tags:
     - install-python
+    - python-cleanup
+
+- name: Clean up alternative tmp directory
+  file:
+    path: "{{ tmp_dir }}/tmp"
+    state: absent
+  tags:
+    - install-python
+    - python-cleanup
 
 - name: Remove temporary swap file
   shell: |
-    swapoff /tmp-python-build-swapfile
-    rm -f /tmp-python-build-swapfile
+    swapoff {{ tmp_dir }}/python-build-swapfile
+    rm -f {{ tmp_dir }}/python-build-swapfile
   when: cleanup_swap | default(true)
   tags:
     - install-python
