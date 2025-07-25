@@ -48,7 +48,8 @@
   tags: install-python
 
 - name: Compile Python source
-  shell: make -j 1 > make.log 2>&1
+  shell: make -j {{ python_make_jobs }} > make.log 2>&1
+
   args:
     chdir: "{{ tmp_dir }}/Python-{{ python_version }}"
     creates: "{{ tmp_dir }}/Python-{{ python_version }}/python"
