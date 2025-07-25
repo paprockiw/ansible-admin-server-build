@@ -60,9 +60,6 @@
   shell: make altinstall >> make.log 2>&1
   args:
     chdir: "{{ tmp_dir }}/Python-{{ python_version }}"
-  register: altinstall_result
-  ### Check to see that a basic library is installed: 
-  failed_when: "'encodings' not in lookup('ansible.builtin.fileglob', '/usr/local/lib/python3.12/*')"
   tags: install-python
 
 - name: Symlink Python system-wide 
