@@ -30,7 +30,7 @@
         shell: /bin/bash
         group: "{{ target_user }}"
         create_home: no
-        home: "/{{ target_user }}"
+        home: "/home/{{ target_user }}"
       tags:
         - user-setup
  
